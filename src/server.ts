@@ -6,6 +6,7 @@ import Todo from "./ToDoInterface";
 import filePath from "./filePath";
 import getErrorMessage from "./utils/getErrorMessage";
 import getEnvVarOrFail from "./utils/getEnvVarOrFail";
+import queryAndLog from "./queryAndLog";
 
 dotenv.config();
 const client = new Client({
@@ -47,8 +48,14 @@ app.post<{}, {}, Todo>("/todos", async (req, res) => {
       "insert into todo(description, creation_date, completed) values($1,$2,$3) returning *";
     const values = [description, creationDate, completed];
     const newToDo = await client.query(sqlQuery, values);
+    const testingPerformance = await queryAndLog(newToDo, sqlQuery, values);
+    console.log(`SQL START qNum: 004 sql:${sqlQuery} params: [${values}]`);
 
     res.status(201).json(newToDo.rows[0]);
+    const timePerformance = performance.now();
+    console.log(
+      `SQL END   qNum: 0004 time:${timePerformance}  rowCount:${newToDo.rowCount}   sql:${sqlQuery} params:  [${values}]`
+    );
   } catch (error) {
     console.error(getErrorMessage(error));
   }
